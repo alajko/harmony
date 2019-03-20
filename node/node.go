@@ -88,6 +88,11 @@ type syncConfig struct {
 	client    *downloader.Client
 }
 
+//NodeSetup sets the setup strategy.
+type NodeSetup interface {
+	SetupAsShardLeader(node *Node)
+}
+
 // Node represents a protocol-participating node in the network
 type Node struct {
 	Consensus              *consensus.Consensus // Consensus object containing all Consensus related data (e.g. committee members, signatures, commits)
@@ -174,6 +179,9 @@ type Node struct {
 
 	// Used to call smart contract locally
 	ContractCaller *contracts.ContractCaller
+
+	// Setup strategy
+	nodeSetup NodeSetup
 }
 
 // Blockchain returns the blockchain from node
@@ -216,9 +224,17 @@ func (node *Node) countNumTransactionsInBlockchain() int {
 	return count
 }
 
+func getSetupStrategy() (strategy NodeSetup) {
+	var rns RealNodeSetup
+	fmt.Println(rns)
+	var fns FakeNodeSetup
+	return fns
+}
+
 // New creates a new node.
 func New(host p2p.Host, consensusObj *consensus.Consensus, db ethdb.Database) *Node {
 	node := Node{}
+	node.nodeSetup = getSetupStrategy()
 
 	if host != nil {
 		node.host = host

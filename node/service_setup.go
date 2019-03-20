@@ -1,6 +1,8 @@
 package node
 
 import (
+	"fmt"
+
 	msg_pb "github.com/harmony-one/harmony/api/proto/message"
 	"github.com/harmony-one/harmony/api/service"
 	"github.com/harmony-one/harmony/api/service/blockproposal"
@@ -17,9 +19,13 @@ import (
 	"github.com/harmony-one/harmony/p2p"
 )
 
-func (node *Node) setupForShardLeader() {
-	nodeConfig, chanPeer := node.initNodeConfiguration(false, false)
+//RealNodeSetup is a setup for setting up
+type RealNodeSetup struct{}
 
+//SetupAsShardLeader setups services required for shard leader.
+func (rns RealNodeSetup) SetupAsShardLeader(node *Node) {
+	nodeConfig, chanPeer := node.initNodeConfiguration(false, false)
+	fmt.Println("Real Node Setup")
 	// Register peer discovery service. No need to do staking for beacon chain node.
 	node.serviceManager.RegisterService(service.PeerDiscovery, discovery.New(node.host, nodeConfig, chanPeer, node.AddBeaconPeer))
 	// Register networkinfo service. "0" is the beacon shard ID
@@ -119,7 +125,7 @@ func (node *Node) ServiceManagerSetup() {
 	node.serviceMessageChan = make(map[service.Type]chan *msg_pb.Message)
 	switch node.NodeConfig.Role() {
 	case nodeconfig.ShardLeader:
-		node.setupForShardLeader()
+		node.nodeSetup.SetupAsShardLeader(node)
 	case nodeconfig.ShardValidator:
 		node.setupForShardValidator()
 	case nodeconfig.BeaconLeader:

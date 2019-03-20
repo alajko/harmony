@@ -39,6 +39,9 @@ func TestNewNode(t *testing.T) {
 	if node.blockchain.CurrentBlock() == nil {
 		t.Error("Genesis block is not initialized for the node")
 	}
+	if node.nodeSetup != nil {
+		t.Error("Node Setup is not NIL")
+	}
 }
 
 func TestGetSyncingPeers(t *testing.T) {
@@ -216,3 +219,18 @@ func TestPingPongHandler(t *testing.T) {
 	go exitServer()
 	node.StartServer()
 }
+
+// func TestRealFakeSetup(t *testing.T) {
+// 	_, pubKey := utils.GenKey("127.0.0.1", "8881")
+// 	leader := p2p.Peer{IP: "127.0.0.1", Port: "8881", ConsensusPubKey: pubKey}
+// 	//   validator := p2p.Peer{IP: "127.0.0.1", Port: "9991"}
+// 	priKey, _, _ := utils.GenKeyP2P("127.0.0.1", "9902")
+// 	host, err := p2pimpl.NewHost(&leader, priKey)
+// 	if err != nil {
+// 		t.Fatalf("newhost failure: %v", err)
+// 	}
+// 	consensus := consensus.New(host, "0", []p2p.Peer{leader}, leader, nil)
+// 	node := New(host, consensus, nil)
+// 	//go sendPingMessage(leader)
+
+// }

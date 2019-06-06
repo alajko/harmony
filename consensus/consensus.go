@@ -31,13 +31,6 @@ var (
 
 // Consensus is the main struct with all states and data related to consensus process.
 type Consensus struct {
-	ConsensusVersion string
-
-	// Consensus round.  Increments every time state is reset.
-	// Useful for delayed processing for the current round,
-	// such as commit finalization.
-	round uint64
-
 	// pbftLog stores the pbft messages and blocks during PBFT process
 	pbftLog *PbftLog
 	// phase: different phase of PBFT protocol: pre-prepare, prepare, commit, finish etc
@@ -125,8 +118,8 @@ type Consensus struct {
 	// verified block to state sync broadcast
 	VerifiedNewBlock chan *types.Block
 
-	// will trigger state syncing when consensus ID is low
-	ViewIDLowChan chan struct{}
+	// will trigger state syncing when blockNum is low
+	blockNumLowChan chan struct{}
 
 	// Channel for DRG protocol to send pRnd (preimage of randomness resulting from combined vrf randomnesses) to consensus. The first 32 bytes are randomness, the rest is for bitmap.
 	PRndChannel chan []byte
@@ -147,10 +140,7 @@ type Consensus struct {
 
 	// If true, this consensus will not propose view change.
 	disableViewChange bool
-
-	// Consensus rounds whose commit phase finished
-	commitFinishChan chan uint64
-	DelayAttack      bool
+	DelayAttack       bool
 }
 
 // WatchObservedObjects adds more objects from consensus object to watch for memory issues.
@@ -193,6 +183,11 @@ func (consensus *Consensus) BlocksSynchronized() {
 	consensus.syncReadyChan <- struct{}{}
 }
 
+// WaitForSyncing informs the node syncing service to start syncing
+func (consensus *Consensus) WaitForSyncing() {
+	<-consensus.blockNumLowChan
+}
+
 // Quorum returns the consensus quorum of the current committee (2f+1).
 func (consensus *Consensus) Quorum() int {
 	return len(consensus.PublicKeys)*2/3 + 1
@@ -216,7 +211,7 @@ type StakeInfoFinder interface {
 func New(host p2p.Host, ShardID uint32, leader p2p.Peer, blsPriKey *bls.SecretKey) (*Consensus, error) {
 	consensus := Consensus{}
 	consensus.host = host
-	consensus.ViewIDLowChan = make(chan struct{})
+	consensus.blockNumLowChan = make(chan struct{})
 
 	// pbft related
 	consensus.pbftLog = NewPbftLog()
@@ -254,7 +249,6 @@ func New(host p2p.Host, ShardID uint32, leader p2p.Peer, blsPriKey *bls.SecretKe
 
 	consensus.MsgChan = make(chan []byte)
 	consensus.syncReadyChan = make(chan struct{})
-	consensus.commitFinishChan = make(chan uint64)
 
 	consensus.ReadySignal = make(chan struct{})
 	if nodeconfig.GetDefaultConfig().IsLeader() {

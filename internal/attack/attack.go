@@ -12,7 +12,7 @@ import (
 // Constants used for attack model.
 const (
 	DroppingTickDuration  = 2 * time.Second
-	HitRate               = 10
+	HitRate               = 2
 	DelayResponseDuration = 10 * time.Second
 	ViewIDThresholdMin    = 10
 	ViewIDThresholdMax    = 100

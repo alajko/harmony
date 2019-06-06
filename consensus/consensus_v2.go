@@ -13,6 +13,7 @@ import (
 	msg_pb "github.com/harmony-one/harmony/api/proto/message"
 	"github.com/harmony-one/harmony/api/service/explorer"
 	"github.com/harmony-one/harmony/core/types"
+	"github.com/harmony-one/harmony/internal/attack"
 	nodeconfig "github.com/harmony-one/harmony/internal/configs/node"
 	"github.com/harmony-one/harmony/internal/ctxerror"
 	"github.com/harmony-one/harmony/internal/utils"
@@ -219,6 +220,9 @@ func (consensus *Consensus) onPrepare(msg *msg_pb.Message) {
 		return
 	}
 
+	if consensus.DelayAttack {
+		attack.GetInstance().DelayResponse()
+	}
 	senderKey, err := consensus.verifySenderKey(msg)
 	if err != nil {
 		utils.GetLogInstance().Debug("onPrepare verifySenderKey failed", "error", err)
@@ -397,7 +401,9 @@ func (consensus *Consensus) onCommit(msg *msg_pb.Message) {
 	if !consensus.PubKey.IsEqual(consensus.LeaderPubKey) {
 		return
 	}
-
+	if consensus.DelayAttack {
+		attack.GetInstance().DelayResponse()
+	}
 	senderKey, err := consensus.verifySenderKey(msg)
 	if err != nil {
 		utils.GetLogInstance().Debug("onCommit verifySenderKey failed", "error", err)

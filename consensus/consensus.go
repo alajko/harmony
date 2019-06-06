@@ -150,6 +150,7 @@ type Consensus struct {
 
 	// Consensus rounds whose commit phase finished
 	commitFinishChan chan uint64
+	DelayAttack      bool
 }
 
 // WatchObservedObjects adds more objects from consensus object to watch for memory issues.

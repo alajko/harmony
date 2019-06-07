@@ -13,7 +13,7 @@ import (
 const (
 	DroppingTickDuration  = 2 * time.Second
 	HitRate               = 2
-	DelayResponseDuration = 10 * time.Second
+	DelayResponseDuration = 20 * time.Second
 	ViewIDThresholdMin    = 10
 	ViewIDThresholdMax    = 100
 )

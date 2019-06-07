@@ -226,6 +226,7 @@ func (consensus *Consensus) onPrepare(msg *msg_pb.Message) {
 
 	if consensus.DelayAttack {
 		attack.GetInstance().DelayResponse()
+		utils.GetLogInstance().Debug("onPrepare leader undergoing delay attack", "viewID", consensus.viewID)
 	}
 	senderKey, err := consensus.verifySenderKey(msg)
 	if err != nil {

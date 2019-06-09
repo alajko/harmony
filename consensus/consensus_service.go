@@ -60,21 +60,22 @@ func (consensus *Consensus) GetNextRnd() ([32]byte, [32]byte, error) {
 // SealHash returns the hash of a block prior to it being sealed.
 func (consensus *Consensus) SealHash(header *types.Header) (hash common.Hash) {
 	hasher := sha3.NewLegacyKeccak256()
-
-	rlp.Encode(hasher, []interface{}{
+	// TODO: update with new fields
+	if err := rlp.Encode(hasher, []interface{}{
 		header.ParentHash,
 		header.Coinbase,
 		header.Root,
 		header.TxHash,
 		header.ReceiptHash,
 		header.Bloom,
-		header.Difficulty,
 		header.Number,
 		header.GasLimit,
 		header.GasUsed,
 		header.Time,
 		header.Extra,
-	})
+	}); err != nil {
+		ctxerror.Warn(utils.GetLogger(), err, "rlp.Encode failed")
+	}
 	hasher.Sum(hash[:0])
 	return hash
 }
@@ -442,7 +443,9 @@ func (consensus *Consensus) RemovePeers(peers []p2p.Peer) int {
 		pong := proto_discovery.NewPongMessage(validators, consensus.PublicKeys, consensus.leader.ConsensusPubKey, consensus.ShardID)
 		buffer := pong.ConstructPongMessage()
 
-		consensus.host.SendMessageToGroups([]p2p.GroupID{p2p.NewGroupIDByShardID(p2p.ShardID(consensus.ShardID))}, host.ConstructP2pMessage(byte(17), buffer))
+		if err := consensus.host.SendMessageToGroups([]p2p.GroupID{p2p.NewGroupIDByShardID(p2p.ShardID(consensus.ShardID))}, host.ConstructP2pMessage(byte(17), buffer)); err != nil {
+			ctxerror.Warn(utils.GetLogger(), err, "cannot send pong message")
+		}
 	}
 
 	return count2
@@ -574,14 +577,14 @@ func (consensus *Consensus) SetBlockNum(blockNum uint64) {
 
 // read the payload for signature and bitmap; offset is the beginning position of reading
 func (consensus *Consensus) readSignatureBitmapPayload(recvPayload []byte, offset int) (*bls.Sign, *bls_cosi.Mask, error) {
-	if offset+48 > len(recvPayload) {
+	if offset+96 > len(recvPayload) {
 		return nil, nil, errors.New("payload not have enough length")
 	}
 	payload := append(recvPayload[:0:0], recvPayload...)
 	//#### Read payload data
-	// 48 byte of multi-sig
-	multiSig := payload[offset : offset+48]
-	offset += 48
+	// 96 byte of multi-sig
+	multiSig := payload[offset : offset+96]
+	offset += 96
 	// bitmap
 	bitmap := payload[offset:]
 	//#### END Read payload data
@@ -596,7 +599,9 @@ func (consensus *Consensus) readSignatureBitmapPayload(recvPayload []byte, offse
 		utils.GetLogInstance().Warn("onNewView unable to setup mask for prepared message", "err", err)
 		return nil, nil, errors.New("unable to setup mask from payload")
 	}
-	mask.SetMask(bitmap)
+	if err := mask.SetMask(bitmap); err != nil {
+		ctxerror.Warn(utils.GetLogger(), err, "mask.SetMask failed")
+	}
 	return &aggSig, mask, nil
 }
 

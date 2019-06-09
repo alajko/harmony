@@ -74,17 +74,19 @@ func TestConstructBlocksSyncMessage(t *testing.T) {
 	root := statedb.IntermediateRoot(false)
 	head := &types.Header{
 		Number:  new(big.Int).SetUint64(uint64(10000)),
-		Nonce:   types.EncodeNonce(uint64(10000)),
 		Epoch:   big.NewInt(0),
 		ShardID: 0,
 		Time:    new(big.Int).SetUint64(uint64(100000)),
 		Root:    root,
 	}
 	head.GasLimit = 10000000000
-	head.Difficulty = params.GenesisDifficulty
 
-	statedb.Commit(false)
-	statedb.Database().TrieDB().Commit(root, true)
+	if _, err := statedb.Commit(false); err != nil {
+		t.Fatalf("statedb.Commit() failed: %s", err)
+	}
+	if err := statedb.Database().TrieDB().Commit(root, true); err != nil {
+		t.Fatalf("statedb.Database().TrieDB().Commit() failed: %s", err)
+	}
 
 	block1 := types.NewBlock(head, nil, nil)
 

@@ -3,7 +3,9 @@ package consensus // consensus
 
 import (
 	"math/big"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -140,7 +142,7 @@ type Consensus struct {
 
 	// If true, this consensus will not propose view change.
 	disableViewChange bool
-	DelayAttack       bool
+	AttackString      string
 }
 
 // WatchObservedObjects adds more objects from consensus object to watch for memory issues.
@@ -186,6 +188,18 @@ func (consensus *Consensus) BlocksSynchronized() {
 // WaitForSyncing informs the node syncing service to start syncing
 func (consensus *Consensus) WaitForSyncing() {
 	<-consensus.blockNumLowChan
+}
+
+// WaitForSyncing informs the node syncing service to start syncing
+func (consensus *Consensus) timeOutAttack() {
+	utils.GetLogInstance().Info("Entering timeOutAttack")
+	opts := strings.Split(consensus.AttackString, "")
+	utils.GetLogInstance().Info("String timeOutAttack", "attack=", consensus.AttackString)
+	if opts[0] == "1" {
+		utils.GetLogInstance().Info("Undergoing timeOutAttack")
+		time.Sleep(150 * time.Second)
+	}
+	return
 }
 
 // Quorum returns the consensus quorum of the current committee (2f+1).

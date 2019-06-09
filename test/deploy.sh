@@ -70,8 +70,8 @@ EOU
    exit 0
 }
 
-DEFAULT_DURATION_NOSYNC=60
-DEFAULT_DURATION_SYNC=200
+DEFAULT_DURATION_NOSYNC=600
+DEFAULT_DURATION_SYNC=600
 
 DB=false
 TXGEN=true
@@ -153,8 +153,8 @@ sleep 2
 # Start nodes
 i=0
 while IFS='' read -r line || [[ -n "$line" ]]; do
-  IFS=' ' read ip port mode shardID <<< $line
-  args=("${base_args[@]}" -ip "${ip}" -port "${port}" -account_index "${i}" -key "/tmp/${ip}-${port}.key" -db_dir "db-${ip}-${port}")
+  IFS=' ' read ip port mode shardID attack <<< $line
+  args=("${base_args[@]}" -ip "${ip}" -port "${port}" -account_index "${i}" -key "/tmp/${ip}-${port}.key" -db_dir "db-${ip}-${port}" -attack "${attack}")
   case "${mode}" in
   leader*|validator*) args=("${args[@]}" -is_genesis);;
   esac

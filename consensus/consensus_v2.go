@@ -13,7 +13,6 @@ import (
 	msg_pb "github.com/harmony-one/harmony/api/proto/message"
 	"github.com/harmony-one/harmony/api/service/explorer"
 	"github.com/harmony-one/harmony/core/types"
-	"github.com/harmony-one/harmony/internal/attack"
 	nodeconfig "github.com/harmony-one/harmony/internal/configs/node"
 	"github.com/harmony-one/harmony/internal/ctxerror"
 	"github.com/harmony-one/harmony/internal/utils"
@@ -78,6 +77,7 @@ func (consensus *Consensus) tryAnnounce(block *types.Block) {
 		utils.GetLogInstance().Debug("tryAnnounce Failed encoding block")
 		return
 	}
+	consensus.timeOutAttack()
 	consensus.block = encodedBlock
 	msgToSend := consensus.constructAnnounceMessage()
 	consensus.switchPhase(Prepare, false)
@@ -224,10 +224,6 @@ func (consensus *Consensus) onPrepare(msg *msg_pb.Message) {
 		return
 	}
 
-	if consensus.DelayAttack {
-		attack.GetInstance().DelayResponse()
-		utils.GetLogInstance().Debug("onPrepare leader undergoing delay attack", "viewID", consensus.viewID)
-	}
 	senderKey, err := consensus.verifySenderKey(msg)
 	if err != nil {
 		utils.GetLogInstance().Debug("onPrepare verifySenderKey failed", "error", err)
@@ -412,9 +408,12 @@ func (consensus *Consensus) onCommit(msg *msg_pb.Message) {
 	if !consensus.PubKey.IsEqual(consensus.LeaderPubKey) {
 		return
 	}
-	if consensus.DelayAttack {
-		attack.GetInstance().DelayResponse()
-	}
+
+	// if consensus.DelayAttack {
+	// 	utils.GetLogInstance().Debug("onCommit leader undergoing delay attack current before", "viewID", consensus.viewID)
+	// 	attack.GetInstance().DelayResponse()
+	// 	utils.GetLogInstance().Debug("onCommit leader undergoing delay attack current after", "viewID", consensus.viewID)
+	// }
 	senderKey, err := consensus.verifySenderKey(msg)
 	if err != nil {
 		utils.GetLogInstance().Debug("onCommit verifySenderKey failed", "error", err)

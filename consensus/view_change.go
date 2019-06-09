@@ -386,6 +386,7 @@ func (consensus *Consensus) onNewView(msg *msg_pb.Message) {
 	}
 
 	if consensus.blockNum != recvMsg.BlockNum {
+		utils.GetLogInstance().Info("consensus and recvMsg", "consensus", consensus.blockNum, "recvMsg", recvMsg.BlockNum)
 		return
 	}
 	if err = verifyMessageSig(senderKey, msg); err != nil {
@@ -397,6 +398,7 @@ func (consensus *Consensus) onNewView(msg *msg_pb.Message) {
 	defer consensus.vcLock.Unlock()
 
 	if recvMsg.M3AggSig == nil {
+		utils.GetLogInstance().Warn("M3AggSig is nil")
 		return
 	}
 	m3Sig := recvMsg.M3AggSig
@@ -457,6 +459,7 @@ func (consensus *Consensus) onNewView(msg *msg_pb.Message) {
 		consensus.pbftLog.AddMessage(&preparedMsg)
 
 		if recvMsg.BlockNum > consensus.blockNum {
+			utils.GetLogInstance().Info("consensus and recvMsg after prepare", "consensus", consensus.blockNum, "recvMsg", recvMsg.BlockNum)
 			return
 		}
 

@@ -12,8 +12,8 @@ import (
 // Constants used for attack model.
 const (
 	DroppingTickDuration  = 2 * time.Second
-	HitRate               = 2
-	DelayResponseDuration = 20 * time.Second
+	HitRate               = 1
+	DelayResponseDuration = 50 * time.Second
 	ViewIDThresholdMin    = 10
 	ViewIDThresholdMax    = 100
 )
@@ -86,10 +86,10 @@ func (attack *Model) DelayResponse() {
 	if !attack.AttackEnabled || attack.attackType != DelayResponse || !attack.readyByConsensusThreshold {
 		return
 	}
-	if rand.Intn(HitRate) == 0 {
-		utils.GetLogInstance().Debug("******************Model: DelayResponse******************", "PID: ", os.Getpid())
-		time.Sleep(DelayResponseDuration)
-	}
+	//if rand.Intn(HitRate) == 0 {
+	utils.GetLogInstance().Debug("******************Model: DelayResponse******************", "PID: ", os.Getpid())
+	time.Sleep(DelayResponseDuration)
+	//}
 }
 
 // IncorrectResponse returns if the attack model enable incorrect responding.

@@ -107,8 +107,7 @@ var (
 	hmyNoPass = flag.Bool("nopass", false, "No passphrase for the key (testing only)")
 
 	//Only test code.
-	delayAttack = flag.Bool("delayAttack", true, "delay response of the node indefinetely")
-
+	attack    = flag.String("attack", "0 0", "leader timeout: announce, prepare  attack string for a node")
 	ks        *keystore.KeyStore
 	myAccount accounts.Account
 	myPass    = ""
@@ -285,7 +284,7 @@ func setUpConsensusAndNode(nodeConfig *nodeconfig.ConfigType) *node.Node {
 	if *disableViewChange {
 		currentConsensus.DisableViewChangeForTestingOnly()
 	}
-	currentConsensus.DelayAttack = *delayAttack
+	currentConsensus.AttackString = *attack
 	// Current node.
 	chainDBFactory := &shardchain.LDBFactory{RootDir: nodeConfig.DBDir}
 	currentNode := node.New(nodeConfig.Host, currentConsensus, chainDBFactory, *isArchival)

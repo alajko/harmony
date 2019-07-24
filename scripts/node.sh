@@ -102,6 +102,8 @@ usage: ${progname} [-1ch] [-k KEYFILE]
    -S             run the ${progname} as non-root user (default: run as root)
    -p passfile    use the given BLS passphrase file
    -D             do not download Harmony binaries (default: download when start)
+   -b bootnodes   bootnodes as csv
+   -t             Use testnet
 
 example:
 
@@ -116,16 +118,17 @@ usage() {
    exit 64  # EX_USAGE
 }
 
-unset start_clean loop run_as_root blspass do_not_download
+unset start_clean loop run_as_root blspass do_not_download testnet
 start_clean=false
 loop=true
 run_as_root=true
 do_not_download=false
 ${BLSKEYFILE=}
+testnet=false
 
 unset OPTIND OPTARG opt
 OPTIND=1
-while getopts :1chk:sSp:D opt
+while getopts :1chk:sSpt:D opt
 do
    case "${opt}" in
    '?') usage "unrecognized option -${OPTARG}";;
@@ -138,6 +141,7 @@ do
    S) run_as_root=false ;;
    p) blspass="${OPTARG}";;
    D) do_not_download=true;;
+   t) testnet=true;;
    *) err 70 "unhandled option -${OPTARG}";;  # EX_SOFTWARE
    esac
 done
@@ -230,7 +234,11 @@ fi
 myip
 
 # public boot node multiaddress
-BN_MA=/ip4/100.26.90.187/tcp/9874/p2p/Qmdfjtk6hPoyrH1zVD9PEH4zfWLo38dP2mDvvKXfh3tnEv,/ip4/54.213.43.194/tcp/9874/p2p/QmZJJx6AdaoEkGLrYG4JeLCKeCKDjnFz2wfHNHxAqFSGA9,/ip4/13.113.101.219/tcp/12019/p2p/QmQayinFSgMMw5cSpDUiD9pQ2WeP6WNmGxpZ6ou3mdVFJX,/ip4/99.81.170.167/tcp/12019/p2p/QmRVbTpEYup8dSaURZfF6ByrMTSKa4UyUzJhSjahFzRqNj
+if [ !$testnet ]; then
+   BN_MA=/ip4/100.26.90.187/tcp/9874/p2p/Qmdfjtk6hPoyrH1zVD9PEH4zfWLo38dP2mDvvKXfh3tnEv,/ip4/54.213.43.194/tcp/9874/p2p/QmZJJx6AdaoEkGLrYG4JeLCKeCKDjnFz2wfHNHxAqFSGA9,/ip4/13.113.101.219/tcp/12019/p2p/QmQayinFSgMMw5cSpDUiD9pQ2WeP6WNmGxpZ6ou3mdVFJX,/ip4/99.81.170.167/tcp/12019/p2p/QmRVbTpEYup8dSaURZfF6ByrMTSKa4UyUzJhSjahFzRqNj
+else
+   BN_MA=/ip4/54.213.43.194/tcp/9868/p2p/QmZJJx6AdaoEkGLrYG4JeLCKeCKDjnFz2wfHNHxAqFSGA9,/ip4/100.26.90.187/tcp/9868/p2p/Qmdfjtk6hPoyrH1zVD9PEH4zfWLo38dP2mDvvKXfh3tnEv,/ip4/13.113.101.219/tcp/12018/p2p/QmQayinFSgMMw5cSpDUiD9pQ2WeP6WNmGxpZ6ou3mdVFJX,/ip4/99.81.170.167/tcp/12018/p2p/QmRVbTpEYup8dSaURZfF6ByrMTSKa4UyUzJhSjahFzRqNj
+fi
 
 if ${start_clean}
 then
@@ -359,17 +367,32 @@ while :
 do
    msg "############### Running Harmony Process ###############"
    if [ "$OS" == "Linux" ]; then
-   # Run Harmony Node
-      if [ -z "${blspass}" ]; then
-         echo -n "${passphrase}" | LD_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass stdin
-      else
-         LD_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass file:${blspass}
+      # Run Harmony Node
+      if [ !$testnet ]; then
+         if [ -z "${blspass}" ]; then
+            echo -n "${passphrase}" | LD_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass stdin
+         else
+            LD_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass file:${blspass}
+         fi
+      else 
+          if [ -z "${blspass}" ]; then
+            echo -n "${passphrase}" | LD_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass stdin -delay_commit=2s -log_conn -network_type=testnet -dns=false
+         else
+            LD_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass file:${blspass} -log_conn -network_type=testnet -dns=false
       fi
    else
-      if [ -z "${blspass}" ]; then
-         echo -n "${passphrase}" | DYLD_FALLBACK_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass stdin
+      if [ !$testnet ]; then
+         if [ -z "${blspass}" ]; then
+            echo -n "${passphrase}" | DYLD_FALLBACK_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass stdin 
+         else
+            DYLD_FALLBACK_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass file:${blspass} 
+         fi
       else
-         DYLD_FALLBACK_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass file:${blspass}
+         if [ -z "${blspass}" ]; then
+            echo -n "${passphrase}" | DYLD_FALLBACK_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass stdin -delay_commit=2s -log_conn -network_type=testnet -dns=false
+         else
+            DYLD_FALLBACK_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass file:${blspass} -delay_commit=2s -log_conn -network_type=testnet -dns=false
+         fi
       fi
    fi || msg "node process finished with status $?"
    ${loop} || break

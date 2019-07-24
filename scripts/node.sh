@@ -102,7 +102,6 @@ usage: ${progname} [-1ch] [-k KEYFILE]
    -S             run the ${progname} as non-root user (default: run as root)
    -p passfile    use the given BLS passphrase file
    -D             do not download Harmony binaries (default: download when start)
-   -b bootnodes   bootnodes as csv
    -t             Use testnet
 
 example:

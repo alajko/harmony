@@ -211,7 +211,7 @@ fi
 for bin in "${BIN[@]}"; do
    ${do_not_download} || rm -f ${bin}
 done
-exit
+
 download_binaries() {
    local outdir
    ${do_not_download} && return 0

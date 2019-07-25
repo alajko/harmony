@@ -190,7 +190,7 @@ BUCKET=pub.harmony.one
 OS=$(uname -s)
 REL=r3
 
-if [ !$testnet ] then;
+if [ "$testnet" == false ]; then
    if [ "$OS" == "Darwin" ]; then
       FOLDER=release/darwin-x86_64/$REL/
       BIN=( harmony libbls384_256.dylib libcrypto.1.0.0.dylib libgmp.10.dylib libgmpxx.4.dylib libmcl.dylib )
@@ -200,6 +200,7 @@ if [ !$testnet ] then;
       BIN=( harmony libbls384_256.so libcrypto.so.10 libgmp.so.10 libgmpxx.so.4 libmcl.so )
    fi
 else
+   echo "Entered Testnet"
    BUCKET=unique-bucket-bin
    OS=$(uname -s)
    REL=testnet
@@ -210,7 +211,7 @@ fi
 for bin in "${BIN[@]}"; do
    ${do_not_download} || rm -f ${bin}
 done
-
+exit
 download_binaries() {
    local outdir
    ${do_not_download} && return 0

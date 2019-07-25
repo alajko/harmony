@@ -374,10 +374,11 @@ do
             LD_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass file:${blspass}
          fi
       else 
-          if [ -z "${blspass}" ]; then
+         if [ -z "${blspass}" ]; then
             echo -n "${passphrase}" | LD_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass stdin -delay_commit=2s -log_conn -network_type=testnet -dns=false
          else
             LD_LIBRARY_PATH=$(pwd) ./harmony -bootnodes $BN_MA -ip $PUB_IP -port $NODE_PORT -is_genesis -blskey_file "${BLSKEYFILE}" -blspass file:${blspass} -log_conn -network_type=testnet -dns=false
+         fi
       fi
    else
       if [ !$testnet ]; then

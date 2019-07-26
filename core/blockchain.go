@@ -224,13 +224,14 @@ func (bc *BlockChain) ValidateNewBlock(block *types.Block) error {
 }
 
 // IsEpochBlock returns whether this block is the first block of an epoch.
+// TODO: lc this is not used
 func IsEpochBlock(block *types.Block) bool {
 	return block.NumberU64()%ShardingSchedule.BlocksPerEpoch() == 0
 }
 
 // IsEpochLastBlock returns whether this block is the last block of an epoch.
 func IsEpochLastBlock(block *types.Block) bool {
-	return block.NumberU64()%ShardingSchedule.BlocksPerEpoch() == ShardingSchedule.BlocksPerEpoch()-1
+	return ShardingSchedule.IsLastBlock(block.NumberU64())
 }
 
 func (bc *BlockChain) getProcInterrupt() bool {

@@ -127,7 +127,7 @@ testnet=false
 
 unset OPTIND OPTARG opt
 OPTIND=1
-while getopts :1chk:sSpt:D opt
+while getopts :1chk:sSp:tD opt
 do
    case "${opt}" in
    '?') usage "unrecognized option -${OPTARG}";;
@@ -145,7 +145,6 @@ do
    esac
 done
 shift $((${OPTIND} - 1))
-
 case $# in
 [1-9]*)
    usage "extra arguments at the end ($*)"
